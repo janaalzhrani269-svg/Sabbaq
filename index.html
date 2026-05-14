@@ -5,171 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SABBAQ | سباق</title>
     <style>
-        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; }
+        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; --r: #e74c3c; --gn: #2ecc71; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--w); overflow: hidden; }
-        
         header { background: var(--p); color: var(--g); height: 50px; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid var(--g); position: sticky; top: 0; z-index: 1000; }
-        .menu-btn { position: absolute; right: 15px; font-size: 25px; cursor: pointer; }
         .logo { font-size: 18px; font-weight: 900; }
-
-        .sidebar { position: fixed; right: -280px; top: 0; width: 280px; height: 100%; background: var(--p); color: #fff; transition: 0.3s; z-index: 2000; padding-top: 50px; overflow-y: auto; }
-        .side-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
-        .submenu { display: none; background: rgba(0,0,0,0.2); padding: 5px 0; }
-        .sub-link { padding: 10px 30px; font-size: 13px; color: #ccc; display: block; }
-
-        .main-scroll { height: calc(100vh - 170px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+        .main-scroll { height: calc(100vh - 170px); overflow-y: auto; padding: 10px; }
         .grid { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
-        @media (orientation: landscape) { .grid { grid-template-columns: repeat(4, 1fr); } }
-
-        .card { background: var(--p); aspect-ratio: 0.9/1; border-radius: 10px; border: 2px solid var(--g); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; text-align: center; }
-        .card i { font-size: 40px; margin-bottom: 2px; }
-        .card h3 { margin: 0; font-size: 14px; color: var(--g); font-weight: 900; }
-        .card span { font-size: 9px; color: #fff; opacity: 0.8; }
-
-        /* صفحة تفاصيل المنطقة المضافة */
-        #det-page { display: none; position: fixed; top: 50px; width: 100%; height: calc(100vh - 130px); background: #fff; z-index: 950; overflow-y: auto; padding: 15px; }
-        .back-btn { background: var(--p); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; cursor: pointer; }
-        .sec-title { color: var(--p); border-bottom: 2px solid var(--g); margin-top: 20px; font-weight: 900; font-size: 16px; padding-bottom: 5px; }
-        .place-card { background: #f8f7ff; padding: 15px; margin: 10px 0; border-radius: 10px; border-right: 5px solid var(--p); }
-        .place-btns { margin-top: 10px; display: flex; gap: 10px; }
-        .link-text { text-decoration: underline; font-size: 12px; font-weight: bold; color: var(--p); cursor: pointer; }
-        .book-btn { background: var(--g); border: none; padding: 5px 12px; border-radius: 5px; font-weight: 900; color: var(--p); font-size: 12px; cursor: pointer; }
-
-        .page { display: none; padding: 15px; height: calc(100vh - 170px); flex-direction: column; }
-        .chat-display { flex-grow: 1; overflow-y: auto; border: 2px solid var(--p); border-radius: 12px; padding: 10px; background: #fafafa; margin-bottom: 45px; }
-        .msg { padding: 8px; border-radius: 8px; max-width: 85%; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
-        .bot { background: #eee; color: var(--p); border-right: 3px solid var(--g); }
-
-        .input-area { position: fixed; bottom: 120px; width: 90%; left: 5%; display: flex; gap: 5px; z-index: 1005; }
-        .input-area input { flex: 1; padding: 10px; border: 2px solid var(--p); border-radius: 8px; }
-        .btn-g { background: var(--g); color: var(--p); border: none; padding: 8px 12px; border-radius: 8px; font-weight: 900; }
-
-        .rights { position: fixed; bottom: 85px; width: 100%; text-align: center; font-size: 10px; color: var(--p); font-weight: bold; background: #fff; padding: 5px 0; border-top: 1px solid #eee; }
+        .card { background: var(--p); aspect-ratio: 0.9/1; border-radius: 10px; border: 2px solid var(--g); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--g); }
         .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; height: 80px; border-top: 1px solid #ddd; justify-content: space-around; padding-top: 5px; z-index: 1000; }
-        .nav-item { text-align: center; color: #999; flex: 1; font-size: 11px; cursor: pointer; font-weight: bold; }
-        .nav-item.active { color: var(--p); }
+        .nav-item { text-align: center; color: #999; flex: 1; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header><div class="menu-btn" onclick="openS()">☰</div><div class="logo">سباق | SABBAQ</div></header>
+<header><div class="logo">سباق | SABBAQ</div></header>
 
-<div class="sidebar" id="side">
-    <div style="padding:15px; font-weight:bold; color:var(--g);" onclick="closeS()">✕ إغلاق</div>
-    <div class="side-item" onclick="showP('login')">👤 تسجيل الدخول</div>
-    <div class="side-item" onclick="togSub('v')">✅ مناطق زرتها ▾</div>
-    <div id="v" class="submenu"><div class="sub-link">📍 الرياض 2024</div><div class="sub-link">📍 جدة 2025</div></div>
-    <div class="side-item" onclick="togSub('f')">🗓️ سأزورها ▾</div>
-    <div id="f" class="submenu"><div class="sub-link">📍 العلا 2026</div></div>
-    <div class="side-item" onclick="togSub('s')">⚙️ الإعدادات ▾</div>
-    <div id="s" class="submenu"><div class="sub-link">🌐 تغيير اللغة</div></div>
-</div>
-
-<div id="exp-p" class="main-scroll" style="display: block;"><div class="grid" id="g"></div></div>
-
-<div id="det-page">
-    <button class="back-btn" onclick="closeD()">⬅ العودة للمناطق</button>
-    <h2 id="det-name" style="color: var(--p); text-align: center;"></h2>
-    <div id="det-content"></div>
-</div>
-
-<div id="chat-p" class="page">
-    <div class="chat-display" id="cB"><div class="msg bot">مرحبا بك، كيف يمكنني مساعدتك؟ أنا مساعد سباق الذكي معاك وأسبقك بكل خطوه سياحية بمناطق السعودية.. آمر بس وش تبي!</div></div>
-    <div class="input-area" id="cI" style="display:none;"><input type="text" id="iA" placeholder="اكتب لـ سباق..."><button class="btn-g" onclick="sA()">إرسال</button></div>
-</div>
-
-<div id="trans-p" class="page">
-    <div class="chat-display" id="tB"><div class="msg bot">مرحباً، كيف يمكنني مساعدتك في الترجمة؟<br>Hello, how can I help you with translation?</div></div>
-    <div class="input-area" id="tI" style="display:none;"><button class="btn-g" onclick="alert('تحدث')">🎤</button><input type="text" id="iT" placeholder="ترجمة..."><button class="btn-g" onclick="sp()">🔊</button></div>
-</div>
-
-<div id="login-p" class="page">
-    <div style="text-align:center; padding:20px;">
-        <h2 style="color:var(--p)">تسجيل الدخول</h2>
-        <input type="text" placeholder="البريد أو الهاتف" style="width:100%; padding:10px; margin-bottom:10px; border:1.5px solid var(--p); border-radius:8px;">
-        <input type="password" placeholder="كلمة المرور" style="width:100%; padding:10px; margin-bottom:10px; border:1.5px solid var(--p); border-radius:8px;">
-        <button class="btn-g" style="width:100%; padding:12px;">دخول</button>
-        <p style="margin-top:20px; font-weight:bold; color:var(--p);">أول مرة تنورنا؟ <span style="color:var(--g)">سوي حساب جديد</span></p>
+<div id="exp-p" class="main-scroll">
+    <div class="grid">
+        <div class="card">🏙️<h3>الرياض</h3></div>
+        <div class="card">🕋<h3>مكة</h3></div>
+        <div class="card">🌊<h3>جدة</h3></div>
     </div>
 </div>
 
-<div class="rights">© 2026 جميع الحقوق محفوظة لصالح Jana Al-Zahrani</div>
-
 <nav class="nav">
-    <div class="nav-item active" onclick="showP('exp')" id="n-e">🗺️<br>استكشف</div>
-    <div class="nav-item" onclick="showP('chat')" id="n-c">🤖<br>المساعد</div>
-    <div class="nav-item" onclick="showP('trans')" id="n-t">🌐<br>المترجم</div>
+    <div class="nav-item">🗺️<br>استكشف</div>
+    <div class="nav-item">🤖<br>المساعد</div>
+    <div class="nav-item">🌐<br>المترجم</div>
 </nav>
 
-<script>
-    const rs = [
-        {a:"الرياض",e:"Riyadh",i:"🏙️",h:["ريتز كارلتون","فندق النرجس"],r:["مطعم ناي","القرية الشعبية"],f:["بوليفارد سيتي"]},
-        {a:"مكة",e:"Makkah",i:"🕋",h:["رافلز مكة","فندق الساعة"],r:["مطعم البيك","الضيافة"],f:["متحف السلام"]},
-        {a:"المدينة",e:"Madinah",i:"🕌",h:["فندق أوبروي","دار التقوى"],r:["مطعم إيوان","الرومانسية"],f:["مجمع الملك فهد"]},
-        {a:"الشرقية",e:"Eastern",i:"🌊",h:["كمبينسكي العثمان","شيراتون"],r:["مطعم السنبوك","ماضينا"],f:["إثراء"]},
-        {a:"القصيم",e:"Qassim",i:"🌴",h:["موفنبيك القصيم"],r:["مقصورة السالم"],f:["مهرجان التمور"]},
-        {a:"عسير",e:"Aseer",i:"⛰️",h:["قصر أبها"],r:["الجوري"],f:["تلفريك السودة"]},
-        {a:"تبوك",e:"Tabuk",i:"❄️",h:["جراند ميلينيوم"],r:["القرية التراثية"],f:["جبال اللوز"]},
-        {a:"حائل",e:"Hail",i:"🏜️",h:["ميلينيوم حائل"],r:["مطعم التراث"],f:["قلعة القشلة"]},
-        {a:"الشمالية",e:"North",i:"🧣",h:["لي بارك"],r:["النافورة"],f:["منتزه النخيل"]},
-        {a:"جازان",e:"Jazan",i:"🏖️",h:["راديسون بلو"],r:["اللؤلؤة"],f:["جزر فرسان"]},
-        {a:"نجران",e:"Najran",i:"🏛️",h:["جلوريا إن"],r:["النخيل"],f:["قصر الإمارة"]},
-        {a:"الباحة",e:"Baha",i:"🍃",h:["سويس إن"],r:["رغدان"],f:["ذي عين"]},
-        {a:"الجوف",e:"Jouf",i:"🏺",h:["فندق النزل"],r:["النخيل"],f:["قلعة زعبل"]}
-    ];
-
-    function render() {
-        document.getElementById('g').innerHTML = rs.map((r, i) => `
-            <div class="card" onclick="openD(${i})">
-                <i>${r.i}</i>
-                <h3>${r.a}</h3>
-                <span>${r.e}</span>
-            </div>`).join('');
-    }
-
-    function openD(i) {
-        const r = rs[i];
-        document.getElementById('exp-p').style.display = 'none';
-        document.getElementById('det-page').style.display = 'block';
-        document.getElementById('det-name').innerText = "وجهتك في " + r.a;
-        
-        const createSec = (title, list) => `
-            <div class="sec-title">${title}</div>
-            ${list.map(item => `
-                <div class="place-card">
-                    <strong>${item}</strong>
-                    <div class="place-btns">
-                        <span class="link-text" onclick="alert('رابط الموقع...')">رابط الموقع</span>
-                        <button class="book-btn" onclick="alert('للحجز...')">للحجز</button>
-                    </div>
-                </div>`).join('')}`;
-
-        document.getElementById('det-content').innerHTML = 
-            createSec("🏨 الفنادق وأماكن السكن", r.h) + 
-            createSec("🍽️ المطاعم والمقاهي", r.r) + 
-            createSec("🎢 الترفيه والمعالم", r.f);
-    }
-
-    function closeD() { document.getElementById('exp-p').style.display = 'block'; document.getElementById('det-page').style.display = 'none'; }
-    function openS() { document.getElementById('side').style.right = '0'; }
-    function closeS() { document.getElementById('side').style.right = '-280px'; }
-    function togSub(id) { const s = document.getElementById(id); const v = s.style.display === 'block'; document.querySelectorAll('.submenu').forEach(e => e.style.display = 'none'); s.style.display = v ? 'none' : 'block'; }
-
-    function showP(p) {
-        ['exp-p','chat-p','trans-p','login-p','det-page'].forEach(id => document.getElementById(id).style.display = 'none');
-        document.getElementById('cI').style.display = (p==='chat')?'flex':'none';
-        document.getElementById('tI').style.display = (p==='trans')?'flex':'none';
-        document.getElementById(p + '-p').style.display = (p==='exp')?'block':'flex';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('n-' + (p==='exp'?'e':p==='chat'?'c':p==='trans'?'t':'e')).classList.add('active');
-        closeS();
-    }
-
-    function sA() { const i = document.getElementById('iA'); if(i.value) { document.getElementById('cB').innerHTML += `<div class="msg user" style="align-self:flex-end; background:var(--p); color:#fff; padding:8px; border-radius:8px; margin-bottom:5px;">${i.value}</div>`; i.value=''; } }
-    function sp() { const t = document.getElementById('iT').value; if(t) { const u = new SpeechSynthesisUtterance(t); u.lang='en-US'; window.speechSynthesis.speak(u); } }
-
-    render();
-</script>
 </body>
 </html>
