@@ -1,0 +1,42 @@
+import { defineConfig } from "tinacms";
+
+export default defineConfig({
+  branch: "main", // أو اسم الفرع الخاص بك
+  clientId: "ee9273be-332e-4f59-9e47-06be6893d9c3", // هويتك الموجودة في الصورة
+  token: "***", // ستحصلين عليه من تبويب Tokens في الصورة
+  build: {
+    outputFolder: "admin",
+    publicFolder: "public",
+  },
+  media: {
+    tina: {
+      mediaRoot: "images",
+      publicFolder: "public",
+    },
+  },
+  schema: {
+    collections: [
+      {
+        name: "post",
+        label: "Posts",
+        path: "/",
+        format: "html",
+        fields: [
+          {
+            type: "string",
+            name: "title",
+            label: "Title",
+            isTitle: true,
+            required: true,
+          },
+          {
+            type: "rich-text",
+            name: "body",
+            label: "Body",
+            isBody: true,
+          },
+        ],
+      },
+    ],
+  },
+});
