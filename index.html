@@ -2,38 +2,37 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SABBAQ | سباق</title>
     <style>
-        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; --r: #e74c3c; --gn: #2ecc71; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { height: 100%; margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--w); overflow: hidden; }
-        header { background: var(--p); color: var(--g); height: 50px; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid var(--g); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 18px; font-weight: 900; }
-        .main-scroll { height: calc(100vh - 170px); overflow-y: auto; padding: 10px; }
-        .grid { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
-        .card { background: var(--p); aspect-ratio: 0.9/1; border-radius: 10px; border: 2px solid var(--g); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--g); }
-        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; height: 80px; border-top: 1px solid #ddd; justify-content: space-around; padding-top: 5px; z-index: 1000; }
-        .nav-item { text-align: center; color: #999; flex: 1; font-size: 11px; font-weight: bold; }
+        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; }
+        body { font-family: sans-serif; background: var(--w); margin: 0; text-align: center; }
+        header { background: var(--p); color: var(--g); padding: 15px; font-weight: bold; }
+        .editable-area { padding: 20px; }
+        .card { border: 2px solid var(--g); border-radius: 10px; padding: 15px; margin: 10px; background: var(--p); color: #fff; }
     </style>
 </head>
 <body>
 
-<header><div class="logo">سباق | SABBAQ</div></header>
+<header>
+    <h1 class="editable">سباق | SABBAQ</h1>
+</header>
 
-<div id="exp-p" class="main-scroll">
-    <div class="grid">
-        <div class="card">🏙️<h3>الرياض</h3></div>
-        <div class="card">🕋<h3>مكة</h3></div>
-        <div class="card">🌊<h3>جدة</h3></div>
+<div class="editable-area">
+    <h2 class="editable">أهلاً بك في دليلك السياحي الذكي</h2>
+    <p class="editable">اضغطي هنا لتغيير هذا النص مباشرة!</p>
+    
+    <div class="card">
+        <h3 class="editable">منطقة الرياض</h3>
+        <p class="editable">اضغطي هنا لوصف الرياض</p>
     </div>
 </div>
 
-<nav class="nav">
-    <div class="nav-item">🗺️<br>استكشف</div>
-    <div class="nav-item">🤖<br>المساعد</div>
-    <div class="nav-item">🌐<br>المترجم</div>
-</nav>
+<script>
+  window.addEventListener('CloudCannonEditableSource', function (e) {
+    // هذا الكود يربط الواجهة بالمحرر المرئي
+  });
+</script>
 
 </body>
 </html>
