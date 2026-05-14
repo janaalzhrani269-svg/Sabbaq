@@ -5,171 +5,207 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SABBAQ | سباق</title>
     <style>
-        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; }
+        :root { --p: #2e0854; --g: #d4af37; --w: #ffffff; --r: #e74c3c; --gn: #2ecc71; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--w); overflow: hidden; }
         
+        /* شاشة التعريف */
+        #intro-overlay { position: fixed; inset: 0; background: var(--p); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 20px; text-align: center; }
+        .intro-page { display: none; }
+        .intro-page.active { display: block; }
+        .skip-btn { position: absolute; top: 20px; left: 20px; color: var(--g); cursor: pointer; font-weight: bold; }
+
         header { background: var(--p); color: var(--g); height: 50px; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid var(--g); position: sticky; top: 0; z-index: 1000; }
         .menu-btn { position: absolute; right: 15px; font-size: 25px; cursor: pointer; }
         .logo { font-size: 18px; font-weight: 900; }
 
-        .sidebar { position: fixed; right: -280px; top: 0; width: 280px; height: 100%; background: var(--p); color: #fff; transition: 0.3s; z-index: 2000; padding-top: 50px; overflow-y: auto; }
-        .side-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
-        .submenu { display: none; background: rgba(0,0,0,0.2); padding: 5px 0; }
-        .sub-link { padding: 10px 30px; font-size: 13px; color: #ccc; display: block; }
+        /* اختيار الفئة */
+        .category-selector { padding: 10px; display: flex; gap: 5px; overflow-x: auto; background: #f4f4f4; border-bottom: 1px solid #ddd; }
+        .cat-btn { padding: 5px 12px; border-radius: 15px; border: 1px solid var(--p); font-size: 11px; white-space: nowrap; cursor: pointer; background: #fff; }
+        .cat-btn.active { background: var(--p); color: #fff; }
 
-        .main-scroll { height: calc(100vh - 170px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+        /* الخريطة الافتراضية */
+        .map-container { position: relative; width: 100%; height: 250px; background: #e0f2f1; border-radius: 15px; margin: 10px 0; border: 2px solid var(--p); overflow: hidden; }
+        .map-pin { position: absolute; font-size: 20px; cursor: pointer; }
+        .pin-label { position: absolute; font-size: 9px; background: rgba(0,0,0,0.5); color: #fff; padding: 2px; border-radius: 3px; transform: translateY(20px); }
+
+        .main-scroll { height: calc(100vh - 250px); overflow-y: auto; padding: 10px; }
         .grid { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
-        @media (orientation: landscape) { .grid { grid-template-columns: repeat(4, 1fr); } }
 
         .card { background: var(--p); aspect-ratio: 0.9/1; border-radius: 10px; border: 2px solid var(--g); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; text-align: center; }
-        .card i { font-size: 40px; margin-bottom: 2px; }
         .card h3 { margin: 0; font-size: 14px; color: var(--g); font-weight: 900; }
-        .card span { font-size: 9px; color: #fff; opacity: 0.8; }
 
-        /* صفحة تفاصيل المنطقة المضافة */
-        #det-page { display: none; position: fixed; top: 50px; width: 100%; height: calc(100vh - 130px); background: #fff; z-index: 950; overflow-y: auto; padding: 15px; }
-        .back-btn { background: var(--p); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; cursor: pointer; }
-        .sec-title { color: var(--p); border-bottom: 2px solid var(--g); margin-top: 20px; font-weight: 900; font-size: 16px; padding-bottom: 5px; }
-        .place-card { background: #f8f7ff; padding: 15px; margin: 10px 0; border-radius: 10px; border-right: 5px solid var(--p); }
-        .place-btns { margin-top: 10px; display: flex; gap: 10px; }
-        .link-text { text-decoration: underline; font-size: 12px; font-weight: bold; color: var(--p); cursor: pointer; }
-        .book-btn { background: var(--g); border: none; padding: 5px 12px; border-radius: 5px; font-weight: 900; color: var(--p); font-size: 12px; cursor: pointer; }
+        /* صفحة التفاصيل والتعليقات */
+        #det-page { display: none; position: fixed; top: 0; width: 100%; height: 100%; background: #fff; z-index: 2500; overflow-y: auto; padding: 15px; }
+        .star-rating { color: var(--g); font-size: 18px; margin: 10px 0; }
+        .comment-sec { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+        .comment-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 5px; }
 
-        .page { display: none; padding: 15px; height: calc(100vh - 170px); flex-direction: column; }
-        .chat-display { flex-grow: 1; overflow-y: auto; border: 2px solid var(--p); border-radius: 12px; padding: 10px; background: #fafafa; margin-bottom: 45px; }
-        .msg { padding: 8px; border-radius: 8px; max-width: 85%; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
-        .bot { background: #eee; color: var(--p); border-right: 3px solid var(--g); }
-
-        .input-area { position: fixed; bottom: 120px; width: 90%; left: 5%; display: flex; gap: 5px; z-index: 1005; }
-        .input-area input { flex: 1; padding: 10px; border: 2px solid var(--p); border-radius: 8px; }
-        .btn-g { background: var(--g); color: var(--p); border: none; padding: 8px 12px; border-radius: 8px; font-weight: 900; }
-
-        .rights { position: fixed; bottom: 85px; width: 100%; text-align: center; font-size: 10px; color: var(--p); font-weight: bold; background: #fff; padding: 5px 0; border-top: 1px solid #eee; }
-        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; height: 80px; border-top: 1px solid #ddd; justify-content: space-around; padding-top: 5px; z-index: 1000; }
-        .nav-item { text-align: center; color: #999; flex: 1; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; height: 70px; border-top: 1px solid #ddd; justify-content: space-around; z-index: 1000; }
+        .nav-item { text-align: center; color: #999; flex: 1; font-size: 11px; padding-top: 10px; }
         .nav-item.active { color: var(--p); }
+        .rights { position: fixed; bottom: 70px; width: 100%; text-align: center; font-size: 9px; background: #fff; }
     </style>
 </head>
 <body>
 
-<header><div class="menu-btn" onclick="openS()">☰</div><div class="logo">سباق | SABBAQ</div></header>
-
-<div class="sidebar" id="side">
-    <div style="padding:15px; font-weight:bold; color:var(--g);" onclick="closeS()">✕ إغلاق</div>
-    <div class="side-item" onclick="showP('login')">👤 تسجيل الدخول</div>
-    <div class="side-item" onclick="togSub('v')">✅ مناطق زرتها ▾</div>
-    <div id="v" class="submenu"><div class="sub-link">📍 الرياض 2024</div><div class="sub-link">📍 جدة 2025</div></div>
-    <div class="side-item" onclick="togSub('f')">🗓️ سأزورها ▾</div>
-    <div id="f" class="submenu"><div class="sub-link">📍 العلا 2026</div></div>
-    <div class="side-item" onclick="togSub('s')">⚙️ الإعدادات ▾</div>
-    <div id="s" class="submenu"><div class="sub-link">🌐 تغيير اللغة</div></div>
-</div>
-
-<div id="exp-p" class="main-scroll" style="display: block;"><div class="grid" id="g"></div></div>
-
-<div id="det-page">
-    <button class="back-btn" onclick="closeD()">⬅ العودة للمناطق</button>
-    <h2 id="det-name" style="color: var(--p); text-align: center;"></h2>
-    <div id="det-content"></div>
-</div>
-
-<div id="chat-p" class="page">
-    <div class="chat-display" id="cB"><div class="msg bot">مرحبا بك، كيف يمكنني مساعدتك؟ أنا مساعد سباق الذكي معاك وأسبقك بكل خطوه سياحية بمناطق السعودية.. آمر بس وش تبي!</div></div>
-    <div class="input-area" id="cI" style="display:none;"><input type="text" id="iA" placeholder="اكتب لـ سباق..."><button class="btn-g" onclick="sA()">إرسال</button></div>
-</div>
-
-<div id="trans-p" class="page">
-    <div class="chat-display" id="tB"><div class="msg bot">مرحباً، كيف يمكنني مساعدتك في الترجمة؟<br>Hello, how can I help you with translation?</div></div>
-    <div class="input-area" id="tI" style="display:none;"><button class="btn-g" onclick="alert('تحدث')">🎤</button><input type="text" id="iT" placeholder="ترجمة..."><button class="btn-g" onclick="sp()">🔊</button></div>
-</div>
-
-<div id="login-p" class="page">
-    <div style="text-align:center; padding:20px;">
-        <h2 style="color:var(--p)">تسجيل الدخول</h2>
-        <input type="text" placeholder="البريد أو الهاتف" style="width:100%; padding:10px; margin-bottom:10px; border:1.5px solid var(--p); border-radius:8px;">
-        <input type="password" placeholder="كلمة المرور" style="width:100%; padding:10px; margin-bottom:10px; border:1.5px solid var(--p); border-radius:8px;">
-        <button class="btn-g" style="width:100%; padding:12px;">دخول</button>
-        <p style="margin-top:20px; font-weight:bold; color:var(--p);">أول مرة تنورنا؟ <span style="color:var(--g)">سوي حساب جديد</span></p>
+<!-- شاشة التعريف -->
+<div id="intro-overlay">
+    <div class="skip-btn" onclick="closeIntro()">تخطي</div>
+    <div id="p1" class="intro-page active">
+        <h2>أهلاً بك في سباق 🏁</h2>
+        <p>رفيقك الذكي لاستكشاف كنوز المملكة العربية السعودية بكل سهولة.</p>
+        <button class="btn-g" style="padding:10px 20px; margin-top:20px; background:var(--g); border:none; border-radius:5px;" onclick="nextPage(2)">التالي</button>
+    </div>
+    <div id="p2" class="intro-page">
+        <h2>حدد ميزانيتك 💰</h2>
+        <p>سواء كنت تبحث عن الرفاهية أو الاقتصادية، سباق يخصص لك الأماكن التي تناسب جيبك.</p>
+        <button class="btn-g" style="padding:10px 20px; margin-top:20px; background:var(--g); border:none; border-radius:5px;" onclick="nextPage(3)">التالي</button>
+    </div>
+    <div id="p3" class="intro-page">
+        <h2>خريطة تفاعلية 🗺️</h2>
+        <p>تابع رحلاتك، المناطق التي زرتها والمخطط لها مباشرة على خريطة المملكة.</p>
+        <button class="btn-g" style="padding:10px 20px; margin-top:20px; background:var(--g); border:none; border-radius:5px;" onclick="closeIntro()">تم، فهمت!</button>
     </div>
 </div>
 
-<div class="rights">© 2026 جميع الحقوق محفوظة لصالح Jana Al-Zahrani</div>
+<header><div class="menu-btn" onclick="openS()">☰</div><div class="logo">سباق | SABBAQ</div></header>
+
+<!-- اختيار الفئة -->
+<div class="category-selector">
+    <div class="cat-btn active" onclick="setCat(this, 'lux')">💎 سياحة درجة أولى</div>
+    <div class="cat-btn" onclick="setCat(this, 'biz')">💼 رجال أعمال</div>
+    <div class="cat-btn" onclick="setCat(this, 'pre')">✨ مميزة</div>
+    <div class="cat-btn" onclick="setCat(this, 'eco')">💸 اقتصادية</div>
+    <div class="cat-btn" onclick="setCat(this, 'car')">🚗 بالسيارة</div>
+</div>
+
+<div id="exp-p" class="main-scroll">
+    <div style="font-weight: bold; margin-bottom: 5px;">📍 تتبع رحلاتك:</div>
+    <div class="map-container" id="map">
+        <!-- سيتم توليد الأسهم برمجياً -->
+        <div class="map-pin" style="top:40%; right:45%; color:var(--gn);">⬆️<span class="pin-label">الرياض (تمت)</span></div>
+        <div class="map-pin" style="top:20%; right:20%; color:var(--r);">⬇️<span class="pin-label">العلا (مخطط)</span></div>
+    </div>
+    <div class="grid" id="g"></div>
+</div>
+
+<!-- صفحة التفاصيل -->
+<div id="det-page">
+    <button style="background:var(--p); color:#fff; width:100%; padding:10px; border:none; border-radius:5px;" onclick="closeD()">❌ إغلاق التفاصيل</button>
+    <h2 id="det-name" style="color:var(--p); text-align:center;"></h2>
+    <div class="star-rating">⭐⭐⭐⭐⭐ (4.8)</div>
+    <div id="det-content"></div>
+    
+    <div class="comment-sec">
+        <h4 style="color:var(--p)">التعليقات والتقييم:</h4>
+        <input type="text" class="comment-input" id="cInput" placeholder="أضف تجربتك هنا...">
+        <button class="btn-g" style="background:var(--g); border:none; padding:5px 15px; border-radius:5px;" onclick="addComment()">نشر</button>
+        <div id="comments-list" style="font-size: 12px; margin-top:10px; color:#555;">
+            "مكان رائع جداً والخدمة ممتازة" - <strong>فهد</strong>
+        </div>
+    </div>
+</div>
+
+<!-- شات المساعد الذكي -->
+<div id="chat-p" style="display:none; padding:15px; height: calc(100vh - 150px); flex-direction: column;">
+    <div id="cB" style="flex-grow:1; border:2px solid var(--p); border-radius:10px; padding:10px; overflow-y:auto; background:#f9f9f9;">
+        <div style="background:#eee; padding:10px; border-radius:8px; margin-bottom:10px;">أنا مساعد سباق.. اختر فئتك واطلب مني أي خطة سياحية وسأبهرك بالنتائج!</div>
+    </div>
+    <div style="display:flex; gap:5px; margin-top:10px;">
+        <input type="text" id="iA" style="flex:1; padding:10px; border:2px solid var(--p); border-radius:5px;" placeholder="مثلاً: خطة لـ 4 أشخاص ميزانية 7000..">
+        <button onclick="sA()" style="background:var(--g); border:none; padding:10px; border-radius:5px;">إرسال</button>
+    </div>
+</div>
+
+<div class="rights">© 2026 Jana Al-Zahrani | SABBAQ</div>
 
 <nav class="nav">
-    <div class="nav-item active" onclick="showP('exp')" id="n-e">🗺️<br>استكشف</div>
-    <div class="nav-item" onclick="showP('chat')" id="n-c">🤖<br>المساعد</div>
-    <div class="nav-item" onclick="showP('trans')" id="n-t">🌐<br>المترجم</div>
+    <div class="nav-item active" onclick="showP('exp')">🗺️<br>استكشف</div>
+    <div class="nav-item" onclick="showP('chat')">🤖<br>المساعد</div>
 </nav>
 
 <script>
+    let currentCat = 'lux';
+
+    function nextPage(n) {
+        document.querySelectorAll('.intro-page').forEach(p => p.classList.remove('active'));
+        document.getElementById('p' + n).classList.add('active');
+    }
+
+    function closeIntro() {
+        document.getElementById('intro-overlay').style.display = 'none';
+        localStorage.setItem('firstTime', 'no');
+    }
+
+    // فحص إذا كان المستخدم دخل لأول مرة
+    if(localStorage.getItem('firstTime') === 'no') {
+        document.getElementById('intro-overlay').style.display = 'none';
+    }
+
+    function setCat(btn, cat) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = cat;
+        alert("تم تخصيص المحتوى لفئة: " + btn.innerText);
+    }
+
     const rs = [
-        {a:"الرياض",e:"Riyadh",i:"🏙️",h:["ريتز كارلتون","فندق النرجس"],r:["مطعم ناي","القرية الشعبية"],f:["بوليفارد سيتي"]},
-        {a:"مكة",e:"Makkah",i:"🕋",h:["رافلز مكة","فندق الساعة"],r:["مطعم البيك","الضيافة"],f:["متحف السلام"]},
-        {a:"المدينة",e:"Madinah",i:"🕌",h:["فندق أوبروي","دار التقوى"],r:["مطعم إيوان","الرومانسية"],f:["مجمع الملك فهد"]},
-        {a:"الشرقية",e:"Eastern",i:"🌊",h:["كمبينسكي العثمان","شيراتون"],r:["مطعم السنبوك","ماضينا"],f:["إثراء"]},
-        {a:"القصيم",e:"Qassim",i:"🌴",h:["موفنبيك القصيم"],r:["مقصورة السالم"],f:["مهرجان التمور"]},
-        {a:"عسير",e:"Aseer",i:"⛰️",h:["قصر أبها"],r:["الجوري"],f:["تلفريك السودة"]},
-        {a:"تبوك",e:"Tabuk",i:"❄️",h:["جراند ميلينيوم"],r:["القرية التراثية"],f:["جبال اللوز"]},
-        {a:"حائل",e:"Hail",i:"🏜️",h:["ميلينيوم حائل"],r:["مطعم التراث"],f:["قلعة القشلة"]},
-        {a:"الشمالية",e:"North",i:"🧣",h:["لي بارك"],r:["النافورة"],f:["منتزه النخيل"]},
-        {a:"جازان",e:"Jazan",i:"🏖️",h:["راديسون بلو"],r:["اللؤلؤة"],f:["جزر فرسان"]},
-        {a:"نجران",e:"Najran",i:"🏛️",h:["جلوريا إن"],r:["النخيل"],f:["قصر الإمارة"]},
-        {a:"الباحة",e:"Baha",i:"🍃",h:["سويس إن"],r:["رغدان"],f:["ذي عين"]},
-        {a:"الجوف",e:"Jouf",i:"🏺",h:["فندق النزل"],r:["النخيل"],f:["قلعة زعبل"]}
+        {a:"الرياض", e:"Riyadh", i:"🏙️"},
+        {a:"مكة", e:"Makkah", i:"🕋"},
+        {a:"جدة", e:"Jeddah", i:"🌊"},
+        {a:"العلا", e:"AlUla", i:"🏜️"}
     ];
 
     function render() {
         document.getElementById('g').innerHTML = rs.map((r, i) => `
-            <div class="card" onclick="openD(${i})">
+            <div class="card" onclick="openD('${r.a}')">
                 <i>${r.i}</i>
                 <h3>${r.a}</h3>
                 <span>${r.e}</span>
             </div>`).join('');
     }
 
-    function openD(i) {
-        const r = rs[i];
-        document.getElementById('exp-p').style.display = 'none';
+    function openD(name) {
         document.getElementById('det-page').style.display = 'block';
-        document.getElementById('det-name').innerText = "وجهتك في " + r.a;
-        
-        const createSec = (title, list) => `
-            <div class="sec-title">${title}</div>
-            ${list.map(item => `
-                <div class="place-card">
-                    <strong>${item}</strong>
-                    <div class="place-btns">
-                        <span class="link-text" onclick="alert('رابط الموقع...')">رابط الموقع</span>
-                        <button class="book-btn" onclick="alert('للحجز...')">للحجز</button>
-                    </div>
-                </div>`).join('')}`;
-
-        document.getElementById('det-content').innerHTML = 
-            createSec("🏨 الفنادق وأماكن السكن", r.h) + 
-            createSec("🍽️ المطاعم والمقاهي", r.r) + 
-            createSec("🎢 الترفيه والمعالم", r.f);
+        document.getElementById('det-name').innerText = "وجهتك في " + name;
+        document.getElementById('det-content').innerHTML = `قائمة مقترحة لفئة (${currentCat}) في ${name}...<br>• فندق 5 نجوم<br>• جولات خاصة`;
     }
 
-    function closeD() { document.getElementById('exp-p').style.display = 'block'; document.getElementById('det-page').style.display = 'none'; }
-    function openS() { document.getElementById('side').style.right = '0'; }
-    function closeS() { document.getElementById('side').style.right = '-280px'; }
-    function togSub(id) { const s = document.getElementById(id); const v = s.style.display === 'block'; document.querySelectorAll('.submenu').forEach(e => e.style.display = 'none'); s.style.display = v ? 'none' : 'block'; }
+    function closeD() { document.getElementById('det-page').style.display = 'none'; }
+
+    function addComment() {
+        const val = document.getElementById('cInput').value;
+        if(val) {
+            document.getElementById('comments-list').innerHTML += `<br>"${val}" - <strong>أنت</strong>`;
+            document.getElementById('cInput').value = '';
+        }
+    }
 
     function showP(p) {
-        ['exp-p','chat-p','trans-p','login-p','det-page'].forEach(id => document.getElementById(id).style.display = 'none');
-        document.getElementById('cI').style.display = (p==='chat')?'flex':'none';
-        document.getElementById('tI').style.display = (p==='trans')?'flex':'none';
-        document.getElementById(p + '-p').style.display = (p==='exp')?'block':'flex';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('n-' + (p==='exp'?'e':p==='chat'?'c':p==='trans'?'t':'e')).classList.add('active');
-        closeS();
+        document.getElementById('exp-p').style.display = (p==='exp')?'block':'none';
+        document.getElementById('chat-p').style.display = (p==='chat')?'flex':'none';
     }
 
-    function sA() { const i = document.getElementById('iA'); if(i.value) { document.getElementById('cB').innerHTML += `<div class="msg user" style="align-self:flex-end; background:var(--p); color:#fff; padding:8px; border-radius:8px; margin-bottom:5px;">${i.value}</div>`; i.value=''; } }
-    function sp() { const t = document.getElementById('iT').value; if(t) { const u = new SpeechSynthesisUtterance(t); u.lang='en-US'; window.speechSynthesis.speak(u); } }
+    function sA() {
+        const i = document.getElementById('iA');
+        const cB = document.getElementById('cB');
+        if(i.value) {
+            cB.innerHTML += `<div style="text-align:left; color:var(--p); font-weight:bold; margin-bottom:10px;">👤: ${i.value}</div>`;
+            
+            // محاكاة ذكاء التطبيق بناء على الفئة والميزانية
+            let reply = "بناءً على طلبك وفئة السفر المختارة، أنصحك بتقسيم الـ 7000 ريال كالتالي: 3000 سكن، 2000 جولات، 2000 طعام وتذاكر لـ 4 أشخاص.";
+            
+            setTimeout(() => {
+                cB.innerHTML += `<div style="background:var(--p); color:#fff; padding:10px; border-radius:8px; margin-bottom:10px;">🤖 سباق: ${reply}</div>`;
+                cB.scrollTop = cB.scrollHeight;
+            }, 800);
+            i.value = '';
+        }
+    }
 
     render();
 </script>
+
 </body>
 </html>
