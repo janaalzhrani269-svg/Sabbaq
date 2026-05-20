@@ -1,6 +1,5 @@
-import { useState } from "react"; // التعديل هنا: حرف i صغير
+import { useState } from "react";
 
-// ألوان التطبيق الرسمية
 const C = {
   dark:   "#2B1B3D",
   purple: "#4A2C6A",
@@ -12,7 +11,6 @@ const C = {
   gray:   "#9CA3AF",
 };
 
-// ===== شعار SABBAQ SVG =====
 const SabbaqLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100">
     <rect width="100" height="100" rx="22" fill={C.dark} />
@@ -25,7 +23,6 @@ const SabbaqLogo = ({ size = 48 }) => (
   </svg>
 );
 
-// ===== خريطة المملكة SVG الحقيقية الشكل =====
 const SaudiMapSVG = ({ visitedSet, plannedSet, onRegionClick, selected }) => {
   const getColor = (id) => {
     if (id === selected)      return C.gold;
@@ -101,7 +98,6 @@ const SaudiMapSVG = ({ visitedSet, plannedSet, onRegionClick, selected }) => {
   );
 };
 
-// ===== بيانات المناطق =====
 const REGION_DATA = {
   riyadh:  { name:"الرياض",   icon:"🏙️", nameEn:"Riyadh" },
   makkah:  { name:"مكة",      icon:"🕋", nameEn:"Makkah" },
@@ -204,7 +200,6 @@ export default function SabbaqApp() {
     },
   ];
 
-  // دالة الشات معدلة محلياً لتجنب مشاكل الـ CORS في المتصفح مؤقتاً
   const sendChat = async () => {
     if (!chatInput.trim() || loading) return;
     const msg = chatInput.trim();
@@ -216,13 +211,12 @@ export default function SabbaqApp() {
     setTimeout(() => {
       setChatMessages([...msgs, { 
         role: "assistant", 
-        text: `أهلاً بك! لقد استلمت رسالتك بخصوص التخطيط لرحلتك بفئة (${CONTENT[category]?.label || "عامة"}). سيتم ربط هذا الرد بذكاء اصطناعي حقيقي قريباً عبر السيرفر الخاص بك!` 
+        text: `مرحباً بك! استلمت استفسارك بخصوص التخطيط للرحلة حسب فئة (${CONTENT[category]?.label || "عامة"}). سيتم ربط هذا الرد بمساعد الذكاء الاصطناعي الفعلي بمجرد إعداد السيرفر الخاص بك.` 
       }]);
       setLoading(false);
     }, 1000);
   };
 
-  // دالة المترجم معدلة محلياً مؤقتاً
   const doTranslate = async () => {
     if (!transInput.trim() || loading) return;
     setLoading(true);
@@ -248,18 +242,10 @@ export default function SabbaqApp() {
   if (screen === "onboard") {
     const slide = onboardSlides[onboardPage];
     return (
-      <div style={{ fontFamily:"'Cairo',sans-serif", direction:"rtl",
-        background:`linear-gradient(160deg, ${C.dark} 0%, #1A0A2E 100%)`,
-        minHeight:"100vh", maxWidth:430, margin:"0 auto",
-        display:"flex", flexDirection:"column", position:"relative" }}>
+      <div style={{ fontFamily:"'Cairo',sans-serif", direction:"rtl", background:`linear-gradient(160deg, ${C.dark} 0%, #1A0A2E 100%)`, minHeight:"100vh", maxWidth:430, margin:"0 auto", display:"flex", flexDirection:"column", position:"relative" }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} ::-webkit-scrollbar{display:none;}`}</style>
 
-        <button onClick={() => setScreen("category")} style={{
-          position:"absolute", top:52, left:20,
-          background:"rgba(255,255,255,0.1)", border:"none", borderRadius:20,
-          color:C.white, padding:"6px 16px", fontSize:13, cursor:"pointer",
-          fontFamily:"Cairo,sans-serif",
-        }}>تخطي</button>
+        <button onClick={() => setScreen("category")} style={{ position:"absolute", top:52, left:20, background:"rgba(255,255,255,0.1)", border:"none", borderRadius:20, color:C.white, padding:"6px 16px", fontSize:13, cursor:"pointer", fontFamily:"Cairo,sans-serif" }}>تخطي</button>
 
         <div style={{ position:"absolute", top:60, right:"50%", transform:"translateX(50%)", display:"flex", gap:8 }}>
           {onboardSlides.map((_, i) => (
@@ -570,7 +556,6 @@ export default function SabbaqApp() {
         ))}
       </div>
 
-      {/* الحقوق محفوظة باسمك جنى */}
       <div style={{ position:"fixed", bottom:68, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, textAlign:"center", fontSize:9, color:"#bbb", pointerEvents:"none" }}>
         © 2026 جميع الحقوق محفوظة لصالح Jana Al-Zahrani
       </div>
