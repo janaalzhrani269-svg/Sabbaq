@@ -1,0 +1,786 @@
+import { useState } from "react";
+
+// ألوان التطبيق الرسمية
+const C = {
+  dark:   "#2B1B3D",
+  purple: "#4A2C6A",
+  green:  "#22B573",
+  gold:   "#D4AF37",
+  goldL:  "#F0D060",
+  white:  "#FFFFFF",
+  light:  "#F5F4FA",
+  gray:   "#9CA3AF",
+};
+
+// ===== شعار SABBAQ SVG =====
+const SabbaqLogo = ({ size = 48 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100">
+    <rect width="100" height="100" rx="22" fill={C.dark} />
+    {/* دائرة خضراء */}
+    <circle cx="50" cy="42" r="28" fill="none" stroke={C.green} strokeWidth="5" strokeDasharray="120 60" strokeLinecap="round" />
+    {/* pin */}
+    <ellipse cx="50" cy="36" rx="13" ry="13" fill={C.green} />
+    <ellipse cx="50" cy="36" rx="9" ry="9" fill={C.dark} />
+    {/* حصان */}
+    <text x="50" y="40" textAnchor="middle" fontSize="10" fill={C.gold}>🐎</text>
+    {/* سيوف */}
+    <line x1="35" y1="60" x2="65" y2="72" stroke={C.gold} strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="65" y1="60" x2="35" y2="72" stroke={C.gold} strokeWidth="2.5" strokeLinecap="round"/>
+  </svg>
+);
+
+// ===== خريطة المملكة SVG الحقيقية الشكل =====
+const SaudiMapSVG = ({ visitedSet, plannedSet, onRegionClick, selected }) => {
+  const getColor = (id) => {
+    if (id === selected)      return C.gold;
+    if (visitedSet.has(id))   return C.green;
+    if (plannedSet.has(id))   return "#3B82F6";
+    return "#7C5FA0";
+  };
+
+  const regions = [
+    { id:"tabuk",    cx:95,  cy:110, name:"تبوك",    icon:"❄️" },
+    { id:"jouf",     cx:175, cy:75,  name:"الجوف",   icon:"🫒" },
+    { id:"northern", cx:255, cy:70,  name:"الحدود",  icon:"🌵" },
+    { id:"hail",     cx:210, cy:145, name:"حائل",    icon:"🏜️" },
+    { id:"madinah",  cx:120, cy:175, name:"المدينة", icon:"🕌" },
+    { id:"qassim",   cx:255, cy:170, name:"القصيم",  icon:"🌴" },
+    { id:"eastern",  cx:330, cy:185, name:"الشرقية", icon:"🌊" },
+    { id:"riyadh",   cx:285, cy:225, name:"الرياض",  icon:"🏙️" },
+    { id:"makkah",   cx:130, cy:240, name:"مكة",     icon:"🕋" },
+    { id:"taif",     cx:160, cy:255, name:"الطائف",  icon:"🌹" },
+    { id:"aseer",    cx:170, cy:300, name:"عسير",    icon:"⛰️" },
+    { id:"albaha",   cx:195, cy:278, name:"الباحة",  icon:"🌿" },
+    { id:"najran",   cx:245, cy:320, name:"نجران",   icon:"🏔️" },
+    { id:"jazan",    cx:155, cy:330, name:"جازان",   icon:"🌺" },
+  ];
+
+  return (
+    <svg viewBox="0 0 430 390" style={{ width:"100%", height:"100%" }}>
+      {/* خلفية */}
+      <rect width="430" height="390" fill="#1A1030" rx="14"/>
+
+      {/* شكل المملكة العربية السعودية التقريبي */}
+      <path
+        d="
+          M 68,82
+          L 85,65 L 110,58 L 145,52 L 195,48 L 250,46 L 300,50
+          L 340,62 L 368,82 L 385,108 L 392,138 L 390,165
+          L 380,192 L 368,215 L 358,238 L 345,258
+          L 330,272 L 312,282 L 295,295
+          L 278,318 L 262,338 L 248,350
+          L 232,346 L 218,336 L 205,322
+          L 192,338 L 178,350 L 162,355
+          L 148,348 L 140,334 L 142,316
+          L 150,302 L 145,285 L 132,268
+          L 118,250 L 104,232 L 90,210
+          L 76,188 L 66,162 L 62,134
+          L 62,108 Z
+        "
+        fill="#3D2470"
+        stroke={C.gold}
+        strokeWidth="1.5"
+        opacity="0.85"
+      />
+
+      {/* خليج عُمان/الخليج العربي */}
+      <path d="M 368,82 L 410,95 L 415,140 L 400,170 L 392,165 L 390,138 L 385,108 Z"
+        fill="#1A3A5C" opacity="0.6"/>
+      {/* البحر الأحمر */}
+      <path d="M 62,108 L 30,120 L 20,180 L 28,240 L 55,280 L 78,295 L 90,280 L 76,250 L 66,220 L 62,180 Z"
+        fill="#1A3A5C" opacity="0.6"/>
+
+      {/* المناطق */}
+      {regions.map((r) => {
+        const col = getColor(r.id);
+        const isSel = r.id === selected;
+        return (
+          <g key={r.id} onClick={() => onRegionClick(r)} style={{ cursor:"pointer" }}>
+            <circle cx={r.cx} cy={r.cy} r={isSel ? 20 : 15}
+              fill={col} stroke={isSel ? C.white : `${col}66`}
+              strokeWidth={isSel ? 2.5 : 1.5} opacity={0.95}/>
+            <text x={r.cx} y={r.cy+1} textAnchor="middle" dominantBaseline="middle"
+              fontSize={isSel ? 13 : 10}>{r.icon}</text>
+            <text x={r.cx} y={r.cy+(isSel?27:22)} textAnchor="middle"
+              fontSize={isSel ? 8.5 : 7} fill={isSel ? C.gold : C.white}
+              fontFamily="Cairo,sans-serif" fontWeight={isSel?"700":"400"}>{r.name}</text>
+          </g>
+        );
+      })}
+
+      {/* مفتاح */}
+      <rect x="8" y="350" width="200" height="34" rx="7" fill="rgba(0,0,0,0.55)"/>
+      {[
+        { col:"#22B573", label:"زرتها",    x:20 },
+        { col:"#3B82F6", label:"سأزورها", x:74 },
+        { col:C.gold,    label:"محدد",     x:140 },
+        { col:"#7C5FA0", label:"لم تُزر", x:185 },
+      ].map((k,i) => (
+        <g key={i}>
+          <circle cx={k.x} cy={362} r={5} fill={k.col}/>
+          <text x={k.x+8} y={366} fontSize="7" fill={C.white} fontFamily="Cairo,sans-serif">{k.label}</text>
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+// ===== بيانات المناطق =====
+const REGION_DATA = {
+  riyadh:  { name:"الرياض",   icon:"🏙️", nameEn:"Riyadh" },
+  makkah:  { name:"مكة",      icon:"🕋", nameEn:"Makkah" },
+  madinah: { name:"المدينة",  icon:"🕌", nameEn:"Madinah" },
+  eastern: { name:"الشرقية", icon:"🌊", nameEn:"Eastern" },
+  aseer:   { name:"عسير",     icon:"⛰️", nameEn:"Aseer" },
+  tabuk:   { name:"تبوك",     icon:"❄️", nameEn:"Tabuk" },
+  hail:    { name:"حائل",     icon:"🏜️", nameEn:"Hail" },
+  qassim:  { name:"القصيم",  icon:"🌴", nameEn:"Qassim" },
+  jazan:   { name:"جازان",    icon:"🌺", nameEn:"Jazan" },
+  najran:  { name:"نجران",    icon:"🏔️", nameEn:"Najran" },
+  albaha:  { name:"الباحة",  icon:"🌿", nameEn:"Al Baha" },
+  jouf:    { name:"الجوف",   icon:"🫒", nameEn:"Al Jouf" },
+  northern:{ name:"الحدود",  icon:"🌵", nameEn:"Northern" },
+  taif:    { name:"الطائف",  icon:"🌹", nameEn:"Taif" },
+};
+
+// محتوى حسب الفئة
+const CONTENT = {
+  first: {
+    hotels: ["بيت الليوان - قصر فاخر", "فور سيزونز", "ريتز كارلتون", "رافلز"],
+    restaurants: ["نارة - مطعم فاخر", "CUT by Wolfgang Puck", "Nobu"],
+    attractions: ["تجربة VIP في الدرعية", "رحلة خاصة في العُلا", "جناح ملكي"],
+    badge: "👑", label: "درجة أولى",
+  },
+  business: {
+    hotels: ["هيلتون", "ماريوت", "شيراتون", "كراون بلازا"],
+    restaurants: ["مطعم الفخامة", "كافيه ذا لوبي", "سيبا"],
+    attractions: ["جولة ثقافية مميزة", "متحف الفن الإسلامي", "واجهة الرياض"],
+    badge: "💼", label: "درجة أعمال",
+  },
+  premium: {
+    hotels: ["نوفوتيل", "ميليا", "ستايبريدج"],
+    restaurants: ["مطاعم متنوعة ومميزة", "كافيه ثقافية", "مطاعم عائلية"],
+    attractions: ["متاحف وحدائق", "أسواق تجارية", "مراكز ترفيه"],
+    badge: "⭐", label: "درجة مميزة",
+  },
+  economy: {
+    hotels: ["إيبيس", "فندق سيتي ماكس", "لاكيما"],
+    restaurants: ["مطاعم شعبية", "مطاعم بوفيه", "كافيهات اقتصادية"],
+    attractions: ["كورنيش مجاني", "حدائق عامة", "أسواق شعبية"],
+    badge: "🎫", label: "درجة اقتصادية",
+  },
+  car: {
+    hotels: ["شاليهات", "استراحات", "أماكن تخييم"],
+    restaurants: ["مطاعم على الطريق", "كافيهات السفر", "بوفيهات"],
+    attractions: ["طرق سياحية", "محطات استراحة", "مناظر طبيعية"],
+    badge: "🚗", label: "سياحة بالسيارة",
+  },
+};
+
+// نجوم التقييم
+const StarRating = ({ value, onChange }) => (
+  <div style={{ display:"flex", gap:3, direction:"ltr" }}>
+    {[1,2,3,4,5].map(s => (
+      <span key={s} onClick={() => onChange && onChange(s)}
+        style={{ fontSize:22, cursor: onChange?"pointer":"default",
+          color: s <= value ? C.gold : "#444" }}>★</span>
+    ))}
+  </div>
+);
+
+// ===== التطبيق الرئيسي =====
+export default function SabbaqApp() {
+  const [screen, setScreen] = useState("onboard"); // onboard | category | main
+  const [onboardPage, setOnboardPage] = useState(0);
+  const [category, setCategory] = useState(null);
+  const [activeTab, setActiveTab] = useState("regions");
+  const [mapView, setMapView] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [visited, setVisited] = useState(new Set());
+  const [planned, setPlanned] = useState(new Set());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    { role:"assistant", text:"مرحبا بك! أنا مساعد سباق الذكي وأسبقك بكل خطوه بمناطق السعودية.. آمر بس وش تبي! 🐎" }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [transInput, setTransInput]   = useState("");
+  const [transOutput, setTransOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [ratings, setRatings]   = useState({});
+  const [comments, setComments] = useState({});
+  const [commentDraft, setCommentDraft] = useState("");
+  const [activeComment, setActiveComment] = useState(null);
+
+  // صفحات Onboarding
+  const onboardSlides = [
+    {
+      icon: "🐎",
+      title: "مرحباً بك في سباق",
+      sub: "دليلك الذكي لاكتشاف وجهات المملكة العربية السعودية",
+      desc: "منصة سياحية ذكية تقدم لك أفضل الوجهات والفنادق والمطاعم في جميع مناطق المملكة بسهولة وبلغتك.",
+    },
+    {
+      icon: "🗺️",
+      title: "اكتشف المملكة",
+      sub: "13 منطقة وتجارب لا تُنسى",
+      desc: "تصفح خريطة تفاعلية حقيقية لمناطق المملكة، علّم الأماكن التي زرتها وخطط لرحلتك القادمة.",
+    },
+    {
+      icon: "👑",
+      title: "تجربة تناسبك",
+      sub: "اختر فئتك وتمتع بتوصيات مخصصة",
+      desc: "من الفاخرة إلى الاقتصادية — سباق يوفر لك خيارات تناسب ميزانيتك وأسلوب سفرك.",
+    },
+  ];
+
+  const sendChat = async () => {
+    if (!chatInput.trim() || loading) return;
+    const msg = chatInput.trim();
+    setChatInput("");
+    const msgs = [...chatMessages, { role:"user", text:msg }];
+    setChatMessages(msgs);
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:800,
+          system:`أنت مساعد سباق الذكي، مساعد سياحي متخصص في المملكة العربية السعودية. أجب بالعربية بشكل ودي ومختصر. فئة المستخدم: ${CONTENT[category]?.label || "عامة"}.`,
+          messages: msgs.map(m => ({ role: m.role==="user"?"user":"assistant", content:m.text })),
+        }),
+      });
+      const d = await res.json();
+      setChatMessages([...msgs, { role:"assistant", text: d.content?.[0]?.text || "عذراً حدث خطأ." }]);
+    } catch { setChatMessages([...msgs, { role:"assistant", text:"تعذّر الاتصال." }]); }
+    setLoading(false);
+  };
+
+  const doTranslate = async () => {
+    if (!transInput.trim() || loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:500,
+          messages:[{ role:"user", content:`ترجم النص التالي (عربي↔إنجليزي). أعطني الترجمة فقط:\n${transInput}` }],
+        }),
+      });
+      const d = await res.json();
+      setTransOutput(d.content?.[0]?.text || "");
+    } catch { setTransOutput("تعذّر الترجمة."); }
+    setLoading(false);
+  };
+
+  const toggleVisited = (id) => {
+    setVisited(p => { const n=new Set(p); n.has(id)?n.delete(id):n.add(id); return n; });
+    setPlanned(p => { const n=new Set(p); n.delete(id); return n; });
+  };
+  const togglePlanned = (id) => {
+    setPlanned(p => { const n=new Set(p); n.has(id)?n.delete(id):n.add(id); return n; });
+    setVisited(p => { const n=new Set(p); n.delete(id); return n; });
+  };
+
+  const catContent = category ? CONTENT[category] : CONTENT.economy;
+  const regList = Object.entries(REGION_DATA).map(([id,v])=>({id,...v}));
+
+  // ===== ONBOARDING =====
+  if (screen === "onboard") {
+    const slide = onboardSlides[onboardPage];
+    return (
+      <div style={{ fontFamily:"'Cairo',sans-serif", direction:"rtl",
+        background:`linear-gradient(160deg, ${C.dark} 0%, #1A0A2E 100%)`,
+        minHeight:"100vh", maxWidth:430, margin:"0 auto",
+        display:"flex", flexDirection:"column", position:"relative" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} ::-webkit-scrollbar{display:none;}`}</style>
+
+        {/* تخطي */}
+        <button onClick={() => setScreen("category")} style={{
+          position:"absolute", top:52, left:20,
+          background:"rgba(255,255,255,0.1)", border:"none", borderRadius:20,
+          color:C.white, padding:"6px 16px", fontSize:13, cursor:"pointer",
+          fontFamily:"Cairo,sans-serif",
+        }}>تخطي</button>
+
+        {/* المؤشرات */}
+        <div style={{ position:"absolute", top:60, right:"50%", transform:"translateX(50%)",
+          display:"flex", gap:8 }}>
+          {onboardSlides.map((_,i) => (
+            <div key={i} style={{ width: i===onboardPage?24:8, height:8, borderRadius:4,
+              background: i===onboardPage ? C.gold : "rgba(255,255,255,0.3)",
+              transition:"all 0.3s" }}/>
+          ))}
+        </div>
+
+        <div style={{ flex:1, display:"flex", flexDirection:"column",
+          alignItems:"center", justifyContent:"center", padding:"80px 32px 32px" }}>
+
+          {/* شعار + أيقونة */}
+          <div style={{ marginBottom:24 }}>
+            <SabbaqLogo size={90} />
+          </div>
+
+          <div style={{ fontSize:64, marginBottom:16 }}>{slide.icon}</div>
+          <h1 style={{ color:C.gold, fontSize:26, fontWeight:900, textAlign:"center", marginBottom:8 }}>
+            {slide.title}
+          </h1>
+          <p style={{ color:C.green, fontSize:15, fontWeight:600, textAlign:"center", marginBottom:16 }}>
+            {slide.sub}
+          </p>
+          <p style={{ color:"rgba(255,255,255,0.7)", fontSize:14, textAlign:"center", lineHeight:1.8 }}>
+            {slide.desc}
+          </p>
+        </div>
+
+        {/* زر التالي / فهمت */}
+        <div style={{ padding:"0 32px 60px" }}>
+          <button onClick={() => {
+            if (onboardPage < onboardSlides.length-1) setOnboardPage(p=>p+1);
+            else setScreen("category");
+          }} style={{
+            width:"100%", padding:"16px", borderRadius:14, border:"none",
+            background:`linear-gradient(135deg, ${C.gold}, #B8930A)`,
+            color:C.dark, fontSize:17, fontWeight:900, cursor:"pointer",
+            fontFamily:"Cairo,sans-serif",
+          }}>
+            {onboardPage < onboardSlides.length-1 ? "التالي ←" : "✅ نعم، فهمت!"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== اختيار الفئة =====
+  if (screen === "category") {
+    const cats = [
+      { id:"first",    badge:"👑", label:"سياحة درجة أولى",    desc:"أرقى الفنادق والتجارب الفاخرة",        color:"#7C3AED" },
+      { id:"business", badge:"💼", label:"سياحة درجة أعمال",   desc:"فنادق مميزة وخدمات احترافية",          color:"#2563EB" },
+      { id:"premium",  badge:"⭐", label:"سياحة درجة مميزة",   desc:"جودة عالية بسعر مناسب",                color:C.green },
+      { id:"economy",  badge:"🎫", label:"سياحة درجة اقتصادية",desc:"خيارات ذكية وموفرة للميزانية",         color:"#D97706" },
+      { id:"car",      badge:"🚗", label:"سياحة بالسيارة",     desc:"حرية التنقل واستكشاف الطرق السياحية", color:"#DC2626" },
+    ];
+    return (
+      <div style={{ fontFamily:"'Cairo',sans-serif", direction:"rtl",
+        background:`linear-gradient(160deg, ${C.dark} 0%, #1A0A2E 100%)`,
+        minHeight:"100vh", maxWidth:430, margin:"0 auto", padding:"0 0 40px" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} ::-webkit-scrollbar{display:none;}`}</style>
+
+        <div style={{ padding:"52px 20px 24px", textAlign:"center" }}>
+          <SabbaqLogo size={70} />
+          <h2 style={{ color:C.gold, fontSize:22, fontWeight:900, marginTop:16 }}>اختر فئتك السياحية</h2>
+          <p style={{ color:"rgba(255,255,255,0.6)", fontSize:13, marginTop:6 }}>
+            سنخصص لك التوصيات بناءً على اختيارك
+          </p>
+        </div>
+
+        <div style={{ padding:"0 16px", display:"flex", flexDirection:"column", gap:12 }}>
+          {cats.map((c) => (
+            <button key={c.id} onClick={() => { setCategory(c.id); setScreen("main"); }}
+              style={{
+                background: category===c.id ? c.color : "rgba(255,255,255,0.07)",
+                border:`2px solid ${c.color}55`, borderRadius:16,
+                padding:"16px 18px", cursor:"pointer",
+                display:"flex", alignItems:"center", gap:14,
+                fontFamily:"Cairo,sans-serif", transition:"all 0.2s",
+              }}>
+              <span style={{ fontSize:32 }}>{c.badge}</span>
+              <div style={{ textAlign:"right" }}>
+                <p style={{ color:C.white, fontWeight:700, fontSize:16 }}>{c.label}</p>
+                <p style={{ color:"rgba(255,255,255,0.6)", fontSize:12, marginTop:2 }}>{c.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ===== التطبيق الرئيسي =====
+  const selReg = selectedRegion ? REGION_DATA[selectedRegion] || { name: selectedRegion, icon:"📍" } : null;
+
+  return (
+    <div style={{ fontFamily:"'Cairo',sans-serif", direction:"rtl",
+      background:C.light, minHeight:"100vh", maxWidth:430, margin:"0 auto",
+      position:"relative", overflowX:"hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0;} ::-webkit-scrollbar{display:none;}
+        .tap{cursor:pointer;transition:transform 0.15s;} .tap:active{transform:scale(0.96);}
+        .btn{cursor:pointer;font-family:'Cairo',sans-serif;border:none;transition:opacity 0.15s;}
+        .btn:active{opacity:0.8;} input,textarea{font-family:'Cairo',sans-serif;}
+      `}</style>
+
+      {/* Side Menu */}
+      {menuOpen && (
+        <div style={{ position:"fixed", inset:0, zIndex:99, display:"flex" }}>
+          <div onClick={()=>setMenuOpen(false)} style={{ flex:1, background:"rgba(0,0,0,0.55)" }}/>
+          <div style={{ width:270, background:C.dark, padding:"60px 20px 20px",
+            borderRight:`2px solid ${C.gold}55`, display:"flex", flexDirection:"column" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <SabbaqLogo size={36} />
+                <span style={{ color:C.gold, fontWeight:900, fontSize:18 }}>SABBAQ</span>
+              </div>
+              <button className="btn" onClick={()=>setMenuOpen(false)}
+                style={{ color:C.gold, background:"none", fontSize:13 }}>✕ إغلاق</button>
+            </div>
+            {/* فئة المستخدم */}
+            <div style={{ background:C.purple, borderRadius:10, padding:"10px 14px", marginBottom:16,
+              border:`1px solid ${C.gold}44` }}>
+              <p style={{ color:C.gold, fontSize:12 }}>فئتك الحالية</p>
+              <p style={{ color:C.white, fontWeight:700, fontSize:15 }}>
+                {catContent.badge} {catContent.label}
+              </p>
+            </div>
+            <button className="btn" onClick={()=>{ setMenuOpen(false); setScreen("category"); }}
+              style={{ background:C.gold, color:C.dark, borderRadius:10, padding:"10px",
+                fontWeight:700, fontSize:13, marginBottom:16 }}>
+              🔄 تغيير الفئة
+            </button>
+            {[
+              { icon:"👤", label:"تسجيل الدخول" },
+              { icon:"✅", label:`مناطق زرتها (${visited.size})` },
+              { icon:"📋", label:`سأزورها (${planned.size})` },
+              { icon:"⚙️", label:"الإعدادات" },
+            ].map((item,i) => (
+              <div key={i} style={{ padding:"14px 0", borderBottom:`1px solid ${C.purple}`,
+                color:C.white, fontSize:14, display:"flex",
+                justifyContent:"space-between", cursor:"pointer" }}>
+                <span>{item.label}</span><span>{item.icon}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ background:C.dark, padding:"48px 16px 12px",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        borderBottom:`2px solid ${C.gold}55`, position:"sticky", top:0, zIndex:20 }}>
+        <button className="btn" onClick={()=>setMenuOpen(true)} style={{
+          background:C.purple, border:`1px solid ${C.gold}44`, borderRadius:20,
+          width:38, height:38, color:C.white, fontSize:16,
+          display:"flex", alignItems:"center", justifyContent:"center" }}>☰</button>
+
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <SabbaqLogo size={32} />
+          <span style={{ color:C.gold, fontSize:18, fontWeight:900 }}>سباق | SABBAQ</span>
+        </div>
+
+        <button className="btn" onClick={()=>{ setSelectedRegion(null); setMenuOpen(false); }} style={{
+          background:C.purple, border:`1px solid ${C.gold}44`, borderRadius:20,
+          width:38, height:38, color:C.white, fontSize:16,
+          display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+      </div>
+
+      {/* Content */}
+      <div style={{ paddingBottom:90, minHeight:"calc(100vh - 120px)", overflowY:"auto" }}>
+
+        {/* ===== المناطق ===== */}
+        {activeTab==="regions" && !selectedRegion && (
+          <div>
+            {/* فئة + إحصاء */}
+            <div style={{ background:C.dark, padding:"10px 16px 14px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <p style={{ color:"rgba(255,255,255,0.5)", fontSize:11 }}>استكشف السعودية</p>
+                  <p style={{ color:C.white, fontWeight:700, fontSize:16 }}>
+                    اكتشف 13 منطقة وتجارب لا تنتهي
+                  </p>
+                </div>
+                <div style={{ background:C.purple, borderRadius:10, padding:"6px 12px",
+                  border:`1px solid ${C.gold}44`, textAlign:"center" }}>
+                  <p style={{ color:C.gold, fontSize:11 }}>{catContent.badge} {catContent.label}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* إحصاءات */}
+            <div style={{ display:"flex", gap:8, margin:"12px 16px" }}>
+              {[
+                { label:"زرتها",    count:visited.size, color:C.green },
+                { label:"سأزورها", count:planned.size, color:"#3B82F6" },
+                { label:"المناطق", count:regList.length, color:C.gold },
+              ].map(s=>(
+                <div key={s.label} style={{ flex:1, background:C.white, borderRadius:10,
+                  padding:"10px 6px", textAlign:"center", border:`2px solid ${s.color}33` }}>
+                  <p style={{ fontSize:20, fontWeight:900, color:s.color }}>{s.count}</p>
+                  <p style={{ fontSize:10, color:C.gray }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* toggle شبكة/خريطة */}
+            <div style={{ display:"flex", margin:"0 16px 12px", background:C.dark,
+              borderRadius:10, overflow:"hidden", border:`1px solid ${C.gold}33` }}>
+              <button className="btn" onClick={()=>setMapView(false)} style={{
+                flex:1, padding:"9px",
+                background:!mapView ? C.gold : "transparent",
+                color:!mapView ? C.dark : C.white,
+                fontSize:13, fontWeight:700 }}>🔲 مناطق</button>
+              <button className="btn" onClick={()=>setMapView(true)} style={{
+                flex:1, padding:"9px",
+                background:mapView ? C.gold : "transparent",
+                color:mapView ? C.dark : C.white,
+                fontSize:13, fontWeight:700 }}>🗺️ خريطة</button>
+            </div>
+
+            {/* خريطة */}
+            {mapView && (
+              <div style={{ margin:"0 16px 16px", borderRadius:14, overflow:"hidden",
+                height:340, border:`1px solid ${C.gold}44` }}>
+                <SaudiMapSVG visitedSet={visited} plannedSet={planned}
+                  selected={selectedRegion}
+                  onRegionClick={(r)=>setSelectedRegion(r.id)}/>
+              </div>
+            )}
+
+            {/* شبكة المناطق */}
+            {!mapView && (
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr",
+                gap:10, padding:"0 16px" }}>
+                {regList.map(r=>(
+                  <div key={r.id} className="tap" onClick={()=>setSelectedRegion(r.id)}
+                    style={{ background: visited.has(r.id)?"#14532D":planned.has(r.id)?"#1E3A5F":C.dark,
+                      borderRadius:14, border:`2px solid ${visited.has(r.id)?C.green:planned.has(r.id)?"#3B82F6":C.gold}33`,
+                      padding:"18px 12px", textAlign:"center", position:"relative" }}>
+                    {visited.has(r.id) && <span style={{ position:"absolute",top:6,left:8,fontSize:12 }}>✅</span>}
+                    {planned.has(r.id) && <span style={{ position:"absolute",top:6,left:8,fontSize:12 }}>📋</span>}
+                    {/* خانة الصورة */}
+                    <div style={{ width:"100%", height:70, background:"rgba(255,255,255,0.05)",
+                      borderRadius:10, marginBottom:8, display:"flex", alignItems:"center",
+                      justifyContent:"center", border:"1px dashed rgba(255,255,255,0.15)",
+                      fontSize:28 }}>{r.icon}</div>
+                    <p style={{ color:C.white, fontWeight:700, fontSize:14 }}>{r.name}</p>
+                    <p style={{ color:`${C.gold}99`, fontSize:10 }}>{r.nameEn}</p>
+                    {/* تقييم */}
+                    <div style={{ display:"flex", justifyContent:"center", marginTop:4 }}>
+                      <StarRating value={ratings[r.id]||0}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== تفاصيل المنطقة ===== */}
+        {activeTab==="regions" && selectedRegion && selReg && (
+          <div>
+            <button className="btn" onClick={()=>setSelectedRegion(null)} style={{
+              background:C.dark, color:C.white, width:"100%", padding:"12px",
+              fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+              ↩️ العودة للمناطق
+            </button>
+
+            <div style={{ padding:"20px 16px 0" }}>
+              {/* صورة المنطقة */}
+              <div style={{ width:"100%", height:140, background:`linear-gradient(135deg,${C.purple},${C.dark})`,
+                borderRadius:16, marginBottom:16, display:"flex", alignItems:"center",
+                justifyContent:"center", flexDirection:"column", border:`1px dashed ${C.gold}55` }}>
+                <span style={{ fontSize:52 }}>{selReg.icon}</span>
+                <p style={{ color:"rgba(255,255,255,0.4)", fontSize:11, marginTop:4 }}>صورة المنطقة</p>
+              </div>
+
+              <h2 style={{ fontSize:24, fontWeight:900, textAlign:"center", color:C.dark }}>
+                {selReg.name}
+              </h2>
+
+              {/* فئة المستخدم */}
+              <div style={{ background:C.dark, borderRadius:10, padding:"8px 14px",
+                marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:18 }}>{catContent.badge}</span>
+                <p style={{ color:C.gold, fontSize:12, fontWeight:600 }}>
+                  توصيات {catContent.label}
+                </p>
+              </div>
+
+              {/* تقييم + تعليق */}
+              <div style={{ background:C.white, borderRadius:14, padding:"14px",
+                marginTop:12, border:`1px solid #E5E7EB` }}>
+                <p style={{ fontWeight:700, fontSize:14, marginBottom:8 }}>⭐ قيّم هذه المنطقة</p>
+                <StarRating value={ratings[selectedRegion]||0}
+                  onChange={v => setRatings(p=>({...p,[selectedRegion]:v}))} />
+                <div style={{ marginTop:10, display:"flex", gap:8 }}>
+                  <input value={commentDraft} onChange={e=>setCommentDraft(e.target.value)}
+                    placeholder="اكتب تعليقك عن المنطقة..."
+                    style={{ flex:1, border:`1px solid #E5E7EB`, borderRadius:8,
+                      padding:"8px 12px", fontSize:13, outline:"none", direction:"rtl" }}/>
+                  <button className="btn" onClick={()=>{
+                    if (!commentDraft.trim()) return;
+                    setComments(p=>({ ...p, [selectedRegion]:[...(p[selectedRegion]||[]),commentDraft.trim()] }));
+                    setCommentDraft("");
+                  }} style={{ background:C.gold, color:C.dark, borderRadius:8,
+                    padding:"8px 14px", fontWeight:700, fontSize:13 }}>إرسال</button>
+                </div>
+                {(comments[selectedRegion]||[]).map((c,i)=>(
+                  <div key={i} style={{ background:C.light, borderRadius:8, padding:"8px 12px",
+                    marginTop:8, fontSize:13, color:C.dark, borderRight:`3px solid ${C.green}` }}>
+                    💬 {c}
+                  </div>
+                ))}
+              </div>
+
+              {/* أزرار زرتها/سأزورها */}
+              <div style={{ display:"flex", gap:8, margin:"12px 0" }}>
+                <button className="btn" onClick={()=>toggleVisited(selectedRegion)} style={{
+                  flex:1, padding:"10px", borderRadius:10, fontWeight:700, fontSize:13,
+                  background:visited.has(selectedRegion)?"#22C55E":"#F0FDF4",
+                  color:visited.has(selectedRegion)?C.white:"#22C55E",
+                  border:"2px solid #22C55E" }}>
+                  {visited.has(selectedRegion)?"✅ زرتها":"✅ علّم زرتها"}
+                </button>
+                <button className="btn" onClick={()=>togglePlanned(selectedRegion)} style={{
+                  flex:1, padding:"10px", borderRadius:10, fontWeight:700, fontSize:13,
+                  background:planned.has(selectedRegion)?"#3B82F6":"#EFF6FF",
+                  color:planned.has(selectedRegion)?C.white:"#3B82F6",
+                  border:"2px solid #3B82F6" }}>
+                  {planned.has(selectedRegion)?"📋 سأزورها":"📋 علّم سأزورها"}
+                </button>
+              </div>
+
+              {/* الفنادق */}
+              {[
+                { title:"🏨 الفنادق وأماكن السكن", items:catContent.hotels, color:C.purple },
+                { title:"🍽️ المطاعم والمقاهي",      items:catContent.restaurants, color:C.gold },
+                { title:"🏛️ المعالم السياحية",       items:catContent.attractions, color:C.green },
+              ].map(sec=>(
+                <div key={sec.title} style={{ marginBottom:16 }}>
+                  <h3 style={{ color:C.dark, fontSize:15, fontWeight:700, marginBottom:6 }}>{sec.title}</h3>
+                  <div style={{ borderBottom:`2px solid ${C.gold}`, marginBottom:8 }}/>
+                  {sec.items.map((item,i)=>(
+                    <div key={i} style={{ background:C.white, borderRadius:10, padding:"12px 14px",
+                      marginBottom:8, display:"flex", justifyContent:"space-between",
+                      alignItems:"center", border:"1px solid #E5E7EB",
+                      borderRight:`4px solid ${sec.color}` }}>
+                      <div>
+                        <p style={{ fontWeight:600, fontSize:14 }}>{item}</p>
+                        <StarRating value={ratings[`${selectedRegion}-${i}-${sec.title}`]||0}
+                          onChange={v=>setRatings(p=>({...p,[`${selectedRegion}-${i}-${sec.title}`]:v}))}/>
+                      </div>
+                      <button className="btn" style={{ background:C.gold, color:C.dark,
+                        borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:700 }}>
+                        التفاصيل
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== خريطة منفردة ===== */}
+        {activeTab==="map" && (
+          <div>
+            <div style={{ background:C.dark, padding:"12px 16px" }}>
+              <p style={{ color:C.white, fontWeight:700 }}>🗺️ خريطة المملكة التفاعلية</p>
+              <p style={{ color:"rgba(255,255,255,0.5)", fontSize:12 }}>اضغط على أي منطقة لعرض تفاصيلها</p>
+            </div>
+            <div style={{ margin:"12px 12px", borderRadius:14, overflow:"hidden",
+              height:"calc(100vh - 250px)", border:`1px solid ${C.gold}44` }}>
+              <SaudiMapSVG visitedSet={visited} plannedSet={planned}
+                selected={null}
+                onRegionClick={(r)=>{ setSelectedRegion(r.id); setActiveTab("regions"); }}/>
+            </div>
+          </div>
+        )}
+
+        {/* ===== المساعد ===== */}
+        {activeTab==="assistant" && (
+          <div style={{ display:"flex", flexDirection:"column", height:"calc(100vh - 200px)" }}>
+            <div style={{ flex:1, overflowY:"auto", padding:"16px",
+              display:"flex", flexDirection:"column", gap:10 }}>
+              {chatMessages.map((m,i)=>(
+                <div key={i} style={{ alignSelf:m.role==="user"?"flex-start":"flex-end", maxWidth:"85%" }}>
+                  <div style={{ background:m.role==="user"?C.light:C.white,
+                    border:`1px solid ${m.role==="assistant"?C.purple+"33":"#E5E7EB"}`,
+                    borderRadius:14,
+                    borderTopRightRadius:m.role==="assistant"?4:14,
+                    borderTopLeftRadius:m.role==="user"?4:14,
+                    padding:"10px 14px", fontSize:14, lineHeight:1.6, color:C.dark }}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {loading && <div style={{ alignSelf:"flex-end", color:C.gray, fontSize:13, padding:"4px 14px" }}>جاري الكتابة...</div>}
+            </div>
+            <div style={{ padding:"10px 12px", background:C.white,
+              borderTop:"1px solid #E5E7EB", display:"flex", gap:8 }}>
+              <input value={chatInput} onChange={e=>setChatInput(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&sendChat()}
+                placeholder="اكتب لـ سباق..."
+                style={{ flex:1, border:`2px solid ${C.purple}44`, borderRadius:10,
+                  padding:"10px 14px", fontSize:14, outline:"none",
+                  background:C.light, direction:"rtl" }}/>
+              <button className="btn" onClick={sendChat} style={{
+                background:C.gold, borderRadius:10, width:44, height:44,
+                color:C.dark, fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>🐎</button>
+            </div>
+          </div>
+        )}
+
+        {/* ===== المترجم ===== */}
+        {activeTab==="translator" && (
+          <div style={{ padding:"16px" }}>
+            <div style={{ background:C.white, borderRadius:14, padding:"16px",
+              border:`1px solid #E5E7EB`, marginBottom:12 }}>
+              <p style={{ fontSize:12, color:C.gray, marginBottom:8 }}>النص (عربي / English)</p>
+              <textarea value={transInput} onChange={e=>setTransInput(e.target.value)}
+                placeholder="ترجمة..." rows={4}
+                style={{ width:"100%", border:`1px solid ${C.purple}33`, borderRadius:10,
+                  padding:"10px", fontSize:14, outline:"none", background:C.light,
+                  resize:"none", direction:"rtl" }}/>
+              <div style={{ display:"flex", gap:8, marginTop:10 }}>
+                <button className="btn" onClick={doTranslate} style={{
+                  background:C.gold, color:C.dark, borderRadius:10,
+                  padding:"10px 20px", fontWeight:700, fontSize:14 }}>🌐 ترجم</button>
+                <button className="btn" onClick={()=>{ setTransInput(""); setTransOutput(""); }}
+                  style={{ background:C.light, color:C.gray, borderRadius:10,
+                    padding:"10px 16px", fontSize:14, border:"1px solid #E5E7EB" }}>مسح</button>
+              </div>
+            </div>
+            {(transOutput||loading) && (
+              <div style={{ background:C.white, borderRadius:14, padding:"16px",
+                border:`2px solid ${C.gold}44` }}>
+                <p style={{ fontSize:12, color:C.gray, marginBottom:8 }}>الترجمة</p>
+                <p style={{ fontSize:14, lineHeight:1.7, color:C.dark }}>
+                  {loading ? "جاري الترجمة..." : transOutput}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)",
+        width:"100%", maxWidth:430, background:C.white,
+        borderTop:"1px solid #E5E7EB", padding:"8px 0 22px",
+        display:"flex", justifyContent:"space-around", zIndex:10 }}>
+        {[
+          { id:"regions",    icon:"🏙️", label:"مناطق" },
+          { id:"map",        icon:"🗺️", label:"خريطة" },
+          { id:"assistant",  icon:"👑", label:"المساعد" },
+          { id:"translator", icon:"🌐", label:"المترجم" },
+        ].map(tab=>(
+          <button key={tab.id} className="btn" onClick={()=>{ setActiveTab(tab.id); setSelectedRegion(null); }}
+            style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+              color: activeTab===tab.id ? C.purple : C.gray, fontFamily:"Cairo,sans-serif",
+              background:"none" }}>
+            <span style={{ fontSize:22 }}>{tab.icon}</span>
+            <span style={{ fontSize:10, fontWeight: activeTab===tab.id?700:400 }}>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{ position:"fixed", bottom:68, left:"50%", transform:"translateX(-50%)",
+        width:"100%", maxWidth:430, textAlign:"center",
+        fontSize:9, color:"#bbb", pointerEvents:"none" }}>
+        © 2026 جميع الحقوق محفوظة لصالح Jana Al-Zahrani
+      </div>
+    </div>
+  );
+}
