@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نبض (Nabd) - مستشعر rPPG الذكي</title>
+    <!-- استيراد الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* المتغيرات الأساسية للهوية البصرية */
+        :root {
+            --primary-color: #8E1B1B; /* أحمر داكن */
+            --bg-color: #F8F5EE;      /* بيج فاتح */
+            --text-main: #333333;
+            --text-secondary: #5F6368;
+            --card-bg: #FFFFFF;
+            --success: #34C759;
+            --warning: #FFCC00;
+            --danger: #FF3B30;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        /* حاوية التصميم الرئيسية */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* الترويسة */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* الشبكة الرئيسية (الفيديو + البيانات) */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* البطاقات بستايل Apple */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* حاوية الفيديو */
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 4/3;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* عكس الصورة كالمرآة */
+        }
+
+        /* مربع منطقة الاهتمام (ROI) */
+        .roi-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            width: 120px;
+            height: 150px;
+            border: 2px dashed #00FF00;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .roi-text {
+            color: #00FF00;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: -180px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* مؤشرات البيانات */
+        .bpm-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .bpm-value {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+        .bpm-label {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .status-indicators {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: var(--bg-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        /* الرسم البياني */
+        .chart-container {
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            position: relative;
+        }
+        canvas#signalChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* الأزرار */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-family: inherit;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn:hover {
+            background-color: #6d1414;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* التذييل / الملاحظة */
+        .disclaimer {
+            margin-top: 30px;
+            padding: 20px;
+            background: #EAE6DF;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: justify;
+            border-right: 4px solid var(--primary-color);
+        }
+        
+        .disclaimer strong {
+            color: var(--primary-color);
+        }
+
+        /* كانفاس مخفي للمعالجة */
+        #hiddenCanvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="header">
+        <h1>مشروع نَبْض (Nabd)</h1>
+        <p>منظومة إسعافية ذكية لدعم مسعفي الهلال الأحمر السعودي في مواسم الحج عبر كشف مبكر للإجهاد الحراري وضربات الشمس بالاستشعار الحيوي (rPPG).</p>
+    </header>
+
+    <div class="main-grid">
+        <!-- قسم الكاميرا (اليسار/اليمين حسب RTL) -->
+        <div class="card">
+            <h3 style="margin-bottom: 15px; color: var(--text-main);">المستشعر البصري (الكاميرا)</h3>
+            <div class="video-container">
+                <video id="webcam" playsinline autoplay muted></video>
+                <div class="roi-overlay" id="roiOverlay">
+                    <div class="roi-text">ضعي الوجه هنا<br>وثبتي حركتك</div>
+                </div>
+            </div>
+            <button id="startBtn" class="btn">ابدأ القياس</button>
+            <p id="cameraError" style="color: var(--danger); margin-top: 10px; display: none; font-size: 0.9rem;">
+                فشل الوصول للكاميرا. يرجى منح الإذن.
+            </p>
+        </div>
+
+        <!-- قسم البيانات والنتائج -->
+        <div class="card">
+            <div class="bpm-display">
+                <div class="bpm-value" id="bpmValue">--</div>
+                <div class="bpm-label">نبضة / دقيقة</div>
+            </div>
+
+            <div class="status-indicators">
+                <div class="status-item">
+                    <span>حالة النظام: <strong id="sysStatusText">في انتظار البدء</strong></span>
+                    <span class="status-dot" id="sysStatusColor" style="background: var(--text-secondary);"></span>
+                </div>
+                <div class="status-item">
+                    <span>جودة الإشارة: <strong id="sigQualityText">--</strong></span>
+                    <span class="status-dot" id="sigQualityColor" style="background: var(--text-secondary);"></span>
+                </div>
+                <div class="status-item">
+                    <span>مدة العينة المجمعة:</span>
+                    <strong id="bufferTimeText">0 ثانية</strong>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="signalChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- التذييل كما هو مطلوب -->
+    <div class="disclaimer">
+        <strong>ملاحظة هامة:</strong> هذا النموذج بحثي أولي (Proof of Concept) يعتمد على تحليل تباين امتصاص الضوء في الأوعية الدموية (rPPG)، وليس جهازاً طبياً معتمداً للتشخيص. الدقة قد تتأثر بظروف الإضاءة المحيطة، درجة لون البشرة، وحركة المستخدم. 
+        <br><br>
+        هذا النموذج الأولي بُني وعُدّل من قِبل فريق نبض: <strong>أماني الحربي، جنا الزهراني</strong> لإثبات فهمنا العميق للمبدأ العلمي (rPPG). تطوير الجهاز الكامل (هاردوير، شاشة HUD، كاميرا حرارية مدمجة كالمستخدمة في نظارة نبض الذكية ولوحة نبض الذكية) يتطلب شراكة تقنية متخصصة — وهذا جزء من خطة التنفيذ القادمة.
+    </div>
+
+    <!-- كانفاس مخفي لمعالجة البكسلات -->
+    <canvas id="hiddenCanvas"></canvas>
+</div>
+
+<script>
+    /* =========================================
+       تهيئة المتغيرات والوصول لعناصر DOM
+       ========================================= */
+    const video = document.getElementById('webcam');
+    const hiddenCanvas = document.getElementById('hiddenCanvas');
+    const hiddenCtx = hiddenCanvas.getContext('2d', { willReadFrequently: true });
+    
+    const startBtn = document.getElementById('startBtn');
+    const cameraError = document.getElementById('cameraError');
+    
+    // عناصر الواجهة
+    const bpmValueUI = document.getElementById('bpmValue');
+    const sysStatusText = document.getElementById('sysStatusText');
+    const sysStatusColor = document.getElementById('sysStatusColor');
+    const sigQualityText = document.getElementById('sigQualityText');
+    const sigQualityColor = document.getElementById('sigQualityColor');
+    const bufferTimeText = document.getElementById('bufferTimeText');
+    
+    const chartCanvas = document.getElementById('signalChart');
+    const chartCtx = chartCanvas.getContext('2d');
+
+    // إعدادات الخوارزمية
+    const BUFFER_MAX_SECONDS = 12; // أقصى طول للنافذة الزمنية
+    const MIN_SECONDS_TO_PROCESS = 6; // أقل مدة لبدء الحساب
+    const TARGET_FS = 20; // التردد المستهدف لإعادة أخذ العينات (20 هرتز = 50ms)
+    
+    let isRunning = false;
+    let stream = null;
+    let rawSignal = []; // مصفوفة لتخزين {time, value}
+    let smoothedBPM = 0; // المتوسط المتحرك للنبض
+    let animationFrameId;
+
+    /* =========================================
+       إدارة الكاميرا
+       ========================================= */
+    startBtn.addEventListener('click', async () => {
+        if (isRunning) {
+            stopMeasurement();
+        } else {
+            startMeasurement();
+        }
+    });
+
+    async function startMeasurement() {
+        try {
+            cameraError.style.display = 'none';
+            // طلب إذن الكاميرا
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 640, height: 480, facingMode: "user" } 
+            });
+            video.srcObject = stream;
+            video.play();
+            
+            video.onloadedmetadata = () => {
+                hiddenCanvas.width = video.videoWidth;
+                hiddenCanvas.height = video.videoHeight;
+                // إعداد كانفاس الرسم البياني
+                chartCanvas.width = chartCanvas.parentElement.clientWidth;
+                chartCanvas.height = chartCanvas.parentElement.clientHeight;
+                
+                isRunning = true;
+                rawSignal = [];
+                smoothedBPM = 0;
+                startBtn.innerText = "إيقاف القياس";
+                startBtn.style.backgroundColor = "var(--text-secondary)";
+                
+                updateStatus("جاري جمع العينات...", "var(--warning)");
+                processFrame(); // بدء حلقة المعالجة
+            };
+        } catch (err) {
+            console.error("خطأ في الوصول للكاميرا: ", err);
+            cameraError.style.display = 'block';
+        }
+    }
+
+    function stopMeasurement() {
+        isRunning = false;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        cancelAnimationFrame(animationFrameId);
+        startBtn.innerText = "ابدأ القياس";
+        startBtn.style.backgroundColor = "var(--primary-color)";
+        bpmValueUI.innerText = "--";
+        updateStatus("متوقف", "var(--text-secondary)");
+        sigQualityText.innerText = "--";
+        sigQualityColor.style.background = "var(--text-secondary)";
+        chartCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+        rawSignal = [];
+        bufferTimeText.innerText = "0 ثانية";
+    }
+
+    /* =========================================
+       معالجة الإطارات (Extracting Green Channel)
+       ========================================= */
+    function processFrame() {
+        if (!isRunning) return;
+
+        const now = performance.now();
+        
+        // رسم الإطار الحالي على الكانفاس المخفي
+        hiddenCtx.drawImage(video, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        
+        // تحديد منطقة الاهتمام (المركز - افتراضياً نسبة من العرض والطول)
+        // ملاحظة: الفيديو معكوس برمجيا في الـ CSS فقط، الكانفاس هنا يرسم الصورة الأصلية
+        const roiW = Math.floor(hiddenCanvas.width * 0.25);
+        const roiH = Math.floor(hiddenCanvas.height * 0.35);
+        const roiX = Math.floor((hiddenCanvas.width - roiW) / 2);
+        const roiY = Math.floor((hiddenCanvas.height - roiH) / 2) - 40; // مرفوع قليلاً للجبهة/الوجه
+
+        // استخراج البكسلات
+        const frameData = hiddenCtx.getImageData(roiX, roiY, roiW, roiH);
+        const data = frameData.data;
+        
+        let sumGreen = 0;
+        let pixelCount = 0;
+
+        // القناة الخضراء (Green) تكون في الـ index 1 (R=0, G=1, B=2, A=3)
+        for (let i = 1; i < data.length; i += 4) {
+            sumGreen += data[i];
+            pixelCount++;
+        }
+        
+        const avgGreen = sumGreen / pixelCount;
+        
+        // تخزين القيمة مع الطابع الزمني
+        rawSignal.push({ time: now, value: avgGreen });
+        
+        // تنظيف البيانات القديمة (نحتفظ بآخر BUFFER_MAX_SECONDS)
+        const cutoffTime = now - (BUFFER_MAX_SECONDS * 1000);
+        while (rawSignal.length > 0 && rawSignal[0].time < cutoffTime) {
+            rawSignal.shift();
+        }
+
+        const durationSecs = (rawSignal[rawSignal.length - 1].time - rawSignal[0].time) / 1000;
+        bufferTimeText.innerText = durationSecs.toFixed(1) + " ثانية";
+
+        // إذا كان لدينا بيانات كافية، نقوم بالتحليل
+        if (durationSecs >= MIN_SECONDS_TO_PROCESS) {
+            analyzeSignal();
+        }
+
+        // استدعاء الإطار القادم
+        animationFrameId = requestAnimationFrame(processFrame);
+    }
+
+    /* =========================================
+       معالجة الإشارة الرقمية (DSP)
+       ========================================= */
+    function analyzeSignal() {
+        if (rawSignal.length < 2) return;
+
+        // 1. إعادة أخذ العينات (Resampling) للحصول على شبكة زمنية منتظمة
+        const resampled = resampleLinear(rawSignal, TARGET_FS);
+        
+        // إذا كان هناك حركة كثيرة (Variance عالي جداً في الإشارة الأصلية)
+        const variance = calculateVariance(resampled);
+        if (variance > 10.0) { // قيمة تقريبية للكشف عن الحركة
+            updateStatus("الإشارة ضعيفة - قللي الحركة", "var(--danger)");
+            sigQualityText.innerText = "سيئة (حركة)";
+            sigQualityColor.style.background = "var(--danger)";
+            return;
+        }
+
+        // 2. إزالة الانحراف البطيء (Detrending via Moving Average)
+        // نافذة 1.5 ثانية = 30 عينة عند 20Hz
+        const detrended = detrendSignal(resampled, Math.floor(1.5 * TARGET_FS));
+
+        // 3. تطبيق نافذة هامينج (Hamming Window) لتقليل تسرب الترددات
+        const windowed = applyHammingWindow(detrended);
+
+        // 4. رسم الإشارة المعالجة
+        drawSignal(windowed);
+
+        // 5. حساب تحويل فورييه المتقطع (DFT) يدوياً
+        // النطاق البشري: 42 BPM إلى 180 BPM => 0.7 Hz إلى 3.0 Hz
+        const { peakFreq, sqi } = calculateManualDFT(windowed, TARGET_FS, 0.7, 3.0, 0.02);
+
+        // تقييم جودة الإشارة (SQI = Signal Quality Index)
+        if (sqi < 0.4) {
+            updateStatus("جاري تحسين القراءة...", "var(--warning)");
+            sigQualityText.innerText = "متوسطة";
+            sigQualityColor.style.background = "var(--warning)";
+        } else {
+            updateStatus("قراءة مستقرة", "var(--success)");
+            sigQualityText.innerText = "ممتازة";
+            sigQualityColor.style.background = "var(--success)";
+            
+            // 6. تحويل التردد إلى نبض وتنعيمه
+            const currentBPM = peakFreq * 60;
+            
+            // تنعيم أسي (Exponential Moving Average) لتفادي القفزات
+            if (smoothedBPM === 0) {
+                smoothedBPM = currentBPM;
+            } else {
+                const alpha = 0.15; // معامل التنعيم (كلما قل، كان أبطأ وأكثر استقراراً)
+                smoothedBPM = (alpha * currentBPM) + ((1 - alpha) * smoothedBPM);
+            }
+            
+            bpmValueUI.innerText = Math.round(smoothedBPM);
+        }
+    }
+
+    /* =========================================
+       الخوارزميات الرياضية (بدون مكتبات)
+       ========================================= */
+    
+    // استيفاء خطي (Linear Interpolation)
+    function resampleLinear(signal, targetFs) {
+        const dt = 1000 / targetFs; // الفاصل الزمني المستهدف بالميلي ثانية
+        const startTime = signal[0].time;
+        const endTime = signal[signal.length - 1].time;
+        const resampled = [];
+        
+        let currentTime = startTime;
+        let idx = 0;
+
+        while (currentTime <= endTime) {
+            // إيجاد النقطتين المحيطتين بالوقت الحالي
+            while (idx < signal.length - 2 && signal[idx + 1].time < currentTime) {
+                idx++;
+            }
+            
+            const p1 = signal[idx];
+            const p2 = signal[idx + 1];
+            
+            if (p1 && p2) {
+                // النسبة
+                const ratio = (currentTime - p1.time) / (p2.time - p1.time);
+                const val = p1.value + ratio * (p2.value - p1.value);
+                resampled.push(val);
+            }
+            currentTime += dt;
+        }
+        return resampled;
+    }
+
+    // إزالة الانحراف (Detrend) باستخدام متوسط متحرك
+    function detrendSignal(signal, windowSize) {
+        const detrended = new Array(signal.length).fill(0);
+        for (let i = 0; i < signal.length; i++) {
+            let sum = 0;
+            let count = 0;
+            // جمع العينات المحيطة
+            const start = Math.max(0, i - Math.floor(windowSize / 2));
+            const end = Math.min(signal.length - 1, i + Math.floor(windowSize / 2));
+            for (let j = start; j <= end; j++) {
+                sum += signal[j];
+                count++;
+            }
+            const localMean = sum / count;
+            detrended[i] = signal[i] - localMean; // طرح المتوسط المحلي
+        }
+        return detrended;
+    }
+
+    // نافذة هامينج (Hamming Window)
+    function applyHammingWindow(signal) {
+        const N = signal.length;
+        const windowed = new Array(N);
+        for (let i = 0; i < N; i++) {
+            const hamming = 0.54 - 0.46 * Math.cos((2 * Math.PI * i) / (N - 1));
+            windowed[i] = signal[i] * hamming;
+        }
+        return windowed;
+    }
+
+    // حساب التباين للكشف عن الحركة
+    function calculateVariance(array) {
+        if (array.length === 0) return 0;
+        const mean = array.reduce((a, b) => a + b, 0) / array.length;
+        const variance = array.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / array.length;
+        return variance;
+    }
+
+    // تحويل فورييه المتقطع اليدوي (Manual DFT) لنطاق تردد محدد فقط للحفاظ على الأداء
+    function calculateManualDFT(signal, fs, minFreq, maxFreq, step) {
+        const N = signal.length;
+        let maxPower = 0;
+        let peakFreq = 0;
+        let totalPower = 0;
+
+        // حساب الـ Power Spectrum فقط للترددات المستهدفة
+        for (let f = minFreq; f <= maxFreq; f += step) {
+            let re = 0;
+            let im = 0;
+            for (let n = 0; n < N; n++) {
+                const angle = 2 * Math.PI * f * (n / fs);
+                re += signal[n] * Math.cos(angle);
+                im -= signal[n] * Math.sin(angle);
+            }
+            const power = (re * re) + (im * im);
+            totalPower += power;
+            
+            if (power > maxPower) {
+                maxPower = power;
+                peakFreq = f;
+            }
+        }
+
+        // حساب مؤشر الثقة SQI (نسبة طاقة القمة إلى إجمالي الطاقة)
+        const sqi = totalPower > 0 ? (maxPower / totalPower) : 0;
+        
+        return { peakFreq, sqi };
+    }
+
+    /* =========================================
+       تحديث الواجهة والرسم
+       ========================================= */
+    function updateStatus(text, color) {
+        sysStatusText.innerText = text;
+        sysStatusColor.style.background = color;
+    }
+
+    function drawSignal(signalArray) {
+        const width = chartCanvas.width;
+        const height = chartCanvas.height;
+        
+        chartCtx.clearRect(0, 0, width, height);
+        
+        if (signalArray.length === 0) return;
+
+        // إيجاد أعلى وأقل قيمة للـ scaling
+        let min = Math.min(...signalArray);
+        let max = Math.max(...signalArray);
+        
+        // إضافة هامش لكي لا تلامس الموجة الأطراف
+        const padding = (max - min) * 0.1;
+        min -= padding;
+        max += padding;
+        const range = max - min;
+
+        chartCtx.beginPath();
+        chartCtx.strokeStyle = "var(--primary-color)";
+        chartCtx.lineWidth = 2;
+        chartCtx.lineJoin = 'round';
+
+        const stepX = width / (signalArray.length - 1);
+        
+        for (let i = 0; i < signalArray.length; i++) {
+            const x = i * stepX;
+            // تطبيع القيمة إلى ارتفاع الـ Canvas
+            // يتم طرح القيمة من الارتفاع لعكس المحور الصادي (Y ينزل للأسفل في الكانفاس)
+            const normalizedY = range === 0 ? 0 : (signalArray[i] - min) / range;
+            const y = height - (normalizedY * height);
+            
+            if (i === 0) {
+                chartCtx.moveTo(x, y);
+            } else {
+                chartCtx.lineTo(x, y);
+            }
+        }
+        chartCtx.stroke();
+    }
+
+    // التعامل مع تغيير حجم الشاشة للحفاظ على أبعاد الرسم البياني
+    window.addEventListener('resize', () => {
+        chartCanvas.width = chartCanvas.parentElement.clientWidth;
+        chartCanvas.height = chartCanvas.parentElement.clientHeight;
+    });
+
+</script>
+
+</body>
+</html>
